@@ -24,10 +24,12 @@ typedef struct {
 
 typedef struct {
     Veiculo *veiculos;
-    int i;
+    int currI;
 } FilaVeiculos;
 
-size_t lerRegistroDat(Veiculo *veiculoArr, int registro);
-void printRegistro(Veiculo veiculo);
+int lerVeiculo(Veiculo *veiculo, int registro); // Lê o veículo na posição registro do arquivo .dat, retorna 1 se foi achado
+int adicionarVeiculo(Veiculo *veiculo); // Adiciona veiculo no final do arquivo .dat, retorna a posição que ele foi inserido
+int removerVeiculo(int registro); // Remove o veículo na posição registro do arquivo .dat, retorna 1 se foi removido
+void printVeiculo(Veiculo veiculo); // Imprime veiculo
 
 #endif

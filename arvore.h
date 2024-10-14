@@ -10,16 +10,15 @@
 
 typedef struct {
     char chaves[M - 1][TAMANHO_PLACA];
-    int rnns[M + 1]; // rnns[0] == rnn do pai
+    int rnnsDat[M - 1];
+    int filhos[M + 1]; // filhos[0] == rnn do pai
     char naFila;
+    int qtdChaves;
 } Pagina;
 
-size_t abrirArvore();
-int lerCabecalho();
-int escreverCabecalho(int raiz);
-void criarArvore(FilaVeiculos *fila);
-int inserirPagina();
-Pagina lerPagina(int rrn);
-int getCabecalhoM();
+int getCabecalhoM(); // Retorna o M armazenado no cabeçalho
+int getCabecalhoRaiz(); // Retorna o RRN da raiz no cabeçalho
+void criarArvore(FilaVeiculos *fila); // Escreve a árvore no arquivo .idx a partir do arquivo .dat
+int adicionarChave(char chave); // adiciona um registro na árvore
 
 #endif
