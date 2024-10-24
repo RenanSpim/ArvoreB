@@ -26,7 +26,7 @@ int adicionarVeiculo(Veiculo *veiculo) {
     size_t written = fwrite(veiculo, sizeof(Veiculo), 1, file);
     fclose(file);
 
-    return written == 1 ? (int)(ftell(file) / sizeof(Veiculo)) - 1 : -1;
+    return written == 1 ? ((ftell(file) / sizeof(Veiculo)) - 1) : -1;
 }
 
 int removerVeiculo(int registro) {

@@ -11,7 +11,8 @@
 typedef struct {
     char chaves[M - 1][TAMANHO_PLACA];
     int rnnsDat[M - 1];
-    int filhos[M + 1]; // filhos[0] == rnn do pai
+    int filhos[M];
+    int pai;
     char naFila;
     int qtdChaves;
 } Pagina;
