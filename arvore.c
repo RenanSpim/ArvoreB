@@ -5,6 +5,22 @@
 
 int rrnRaiz = 0;
 
+int getCabecalhoM();
+int getCabecalhoRaiz();
+void dividirPagina(int rrn, char chave[TAMANHO_PLACA]);
+void escreverCabecalho(FILE *file);
+void criarArvore(FilaVeiculos *fila);
+void lerPagina(int rrn, Pagina *pagina);
+void escreverPaginaNoDisco(int rrn, Pagina *pagina);
+void inserirNaPagina(Pagina *pagina, char chave[TAMANHO_PLACA]);
+void promoverChave(char chave[TAMANHO_PLACA], int rrn1, int rrn2);
+void dividirPagina(int rrn, char chave[TAMANHO_PLACA]);
+int buscarIndice(char chave[TAMANHO_PLACA], Pagina *pagina);
+int geraRrnPaginas();
+int buscarPaginaInsercao(char chave[TAMANHO_PLACA], Pagina *pagina);
+int adicionarChave(char chave[TAMANHO_PLACA]);
+int buscarChave(char chave[TAMANHO_PLACA]);
+
 int getCabecalhoM() {
     FILE *file = fopen(IDX_NOME, "rb");
     int m;
@@ -60,13 +76,83 @@ void criarArvore(FilaVeiculos *fila) {
     fclose(file);
 }
 
-int geraRrnPaginas() {
-    // TODO
-    return -1;
+int buscarIndice(char chave[TAMANHO_PLACA], Pagina *pagina) {
+    for (int i = 0; i < pagina->qtdChaves; i++) {
+        if (strcmp(chave, pagina->chaves[i]) < 0) {
+            return i;
+        }
+    }
+
+    return pagina->qtdChaves;
 }
 
-void promoverChave(char chave[TAMANHO_PLACA], int rrn1, int rrn2) {
-    // TODO
+void lerPagina(int rrn, Pagina *pagina) {
+    FILE *file = fopen(IDX_NOME, "rb+");
+
+    if (!file) {
+        perror("Erro ao ler pagina no disco");
+        return;
+    }
+
+    fseek(file, TAMANHO_CABECALHO + rrn * sizeof(Pagina), SEEK_SET);
+    fread(pagina, sizeof(Pagina), 1, file);
+    fclose(file);
+}
+
+void escreverPaginaNoDisco(int rrn, Pagina *pagina) {
+    FILE *file = fopen(IDX_NOME, "rb+");
+
+    if (!file) {
+        perror("Erro ao escrever pagina no disco");
+        return;
+    }
+
+    fseek(file, TAMANHO_CABECALHO + rrn * sizeof(Pagina), SEEK_SET);
+    fwrite(pagina, sizeof(Pagina), 1, file);
+    fclose(file);
+}
+
+int geraRrnPaginas() {
+    FILE *file = fopen(IDX_NOME, "rb+");
+
+    if (!file) {
+        perror("Erro ao gerar o rrn da pagina");
+        return -1;
+    }
+
+    int rrn;
+    fseek(file, 0, SEEK_END);
+
+    rrn = (ftell(file) - TAMANHO_CABECALHO) / sizeof(Pagina);
+
+    fclose(file);
+
+    return rrn;
+}
+
+int buscarPaginaInsercao(char chave[TAMANHO_PLACA], Pagina *pagina) {
+    int rrnPagina = rrnRaiz;
+
+    while (rrnPagina != -1) {
+        lerPagina(rrnPagina, pagina);
+
+        int i = 0;
+        for (; i < pagina->qtdChaves; i++) {
+            if (strcmp(chave, pagina->chaves[i]) < 0) {
+                break;
+            }
+        }
+
+        if (pagina->filhos[0] == -1) {
+            return rrnPagina;
+        }
+
+        rrnPagina = pagina->filhos[i];
+    }
+
+    perror("Erro na busca pagina insercao (sem raiz?)");
+
+    return rrnPagina;
 }
 
 void inserirNaPagina(Pagina *pagina, char chave[TAMANHO_PLACA]) {
@@ -85,30 +171,36 @@ void inserirNaPagina(Pagina *pagina, char chave[TAMANHO_PLACA]) {
     pagina->qtdChaves++;
 }
 
-void escreverPaginaNoDisco(int rrn, Pagina *pagina) {
-    FILE *file = fopen(IDX_NOME, "rb+");
+void promoverChave(char chave[TAMANHO_PLACA], int rrn1, int rrn2) {
+    Pagina paginaPai;
+    int rrnPai = getCabecalhoRaiz();
 
-    if (!file) {
-        perror("Erro ao escrever pagina no disco");
+    if (rrnPai == -1) {
+        Pagina novaRaiz;
+
+        novaRaiz.qtdChaves = 1;
+        strcpy(novaRaiz.chaves[0], chave);
+        novaRaiz.filhos[0] = rrn1;
+        novaRaiz.filhos[1] = rrn2;
+        novaRaiz.naFila = 0;
+
+        rrnRaiz = geraRrnPaginas();
+        escreverPaginaNoDisco(rrnRaiz, &novaRaiz);
+
         return;
     }
 
-    fseek(file, TAMANHO_CABECALHO + rrn * sizeof(Pagina), SEEK_SET);
-    fwrite(pagina, sizeof(Pagina), 1, file);
-    fclose(file);
-}
+    buscarPaginaInsercao(chave, &paginaPai);
 
-void lerPagina(int rrn, Pagina *pagina) {
-    FILE *file = fopen(IDX_NOME, "rb+");
-
-    if (!file) {
-        perror("Erro ao ler pagina no disco");
-        return;
+    if (paginaPai.qtdChaves < M - 1) {
+        int index = buscarIndice(chave, &paginaPai);
+        inserirNaPagina(&paginaPai, chave);
+        paginaPai.filhos[index] = rrn1;
+        paginaPai.filhos[index + 1] = rrn2;
+        escreverPaginaNoDisco(rrnPai, &paginaPai);
+    } else {
+        dividirPagina(rrnPai, chave);
     }
-
-    fseek(file, TAMANHO_CABECALHO + rrn * sizeof(Pagina), SEEK_SET);
-    fread(pagina, sizeof(Pagina), 1, file);
-    fclose(file);
 }
 
 void dividirPagina(int rrn, char chave[TAMANHO_PLACA]) {
@@ -118,7 +210,6 @@ void dividirPagina(int rrn, char chave[TAMANHO_PLACA]) {
 
     novaPagina.qtdChaves = 0;
     novaPagina.naFila = 0;
-    novaPagina.pai = -1;
 
     lerPagina(rrn, &pagina);
 
@@ -158,14 +249,9 @@ void dividirPagina(int rrn, char chave[TAMANHO_PLACA]) {
     promoverChave(chaves[meio], rrn, novoRrn);
 }
 
-int buscarPaginaParaInsercao(char chave[TAMANHO_PLACA], Pagina *pagina) {
-    // TODO
-    return -1;
-}
-
 int adicionarChave(char chave[TAMANHO_PLACA]) {
     Pagina pagina;
-    int rrnPagina = buscarPaginaParaInsercao(chave, &pagina);
+    int rrnPagina = buscarPaginaInsercao(chave, &pagina);
     
     if (pagina.qtdChaves < M - 1) { // maximo de chaves
         inserirNaPagina(&pagina, chave);

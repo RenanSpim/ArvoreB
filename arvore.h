@@ -12,7 +12,6 @@ typedef struct {
     char chaves[M - 1][TAMANHO_PLACA];
     int rnnsDat[M - 1];
     int filhos[M];
-    int pai;
     char naFila;
     int qtdChaves;
 } Pagina;
@@ -22,5 +21,6 @@ int getCabecalhoRaiz(); // Retorna o RRN da raiz no cabeçalho
 void criarArvore(FilaVeiculos *fila); // Escreve a árvore no arquivo .idx a partir do arquivo .dat
 int adicionarChave(char chave[TAMANHO_PLACA]); // Adiciona um registro na árvore
 int buscarChave(char chave[TAMANHO_PLACA]); // Busca a chave chave e retorna o rrn do arquivo .dat
+int removerChave(char chave[TAMANHO_PLACA]); // Remove a chave chave do arquivo .dat
 
 #endif
