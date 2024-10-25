@@ -18,6 +18,7 @@ typedef struct {
 
 int getCabecalhoM(); // Retorna o M armazenado no cabeçalho
 int getCabecalhoRaiz(); // Retorna o RRN da raiz no cabeçalho
+void setCabecalhoRaiz(int raiz); // Seta o novo rrn do nó raiz
 void criarArvore(FilaVeiculos *fila); // Escreve a árvore no arquivo .idx a partir do arquivo .dat
 int adicionarChave(char chave[TAMANHO_PLACA]); // Adiciona um registro na árvore
 int buscarChave(char chave[TAMANHO_PLACA]); // Busca a chave chave e retorna o rrn do arquivo .dat

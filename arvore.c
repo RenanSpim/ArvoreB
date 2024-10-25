@@ -42,10 +42,17 @@ int getCabecalhoRaiz() {
     return rrnRaiz;
 }
 
-void escreverCabecalho(FILE *file) {
-    int m = M;
-    fwrite(&m, sizeof(int), 1, file);
-    fwrite(&rrnRaiz, sizeof(int), 1, file);
+void setCabecalhoRaiz(int raiz) {
+    FILE *file = fopen(IDX_NOME, "rb");
+
+    fseek(file, sizeof(int), SEEK_SET); // pula M
+    
+    fwrite(&raiz, sizeof(int), 1, file);
+    rrnRaiz = raiz;
+
+    fclose(file);
+
+    return rrnRaiz;
 }
 
 void criarArvore(FilaVeiculos *fila) {
@@ -74,6 +81,53 @@ void criarArvore(FilaVeiculos *fila) {
     }
 
     fclose(file);
+}
+
+int adicionarChave(char chave[TAMANHO_PLACA]) {
+    Pagina pagina;
+    int rrnPagina = buscarPaginaInsercao(chave, &pagina);
+    
+    if (pagina.qtdChaves < M - 1) { // maximo de chaves
+        inserirNaPagina(&pagina, chave);
+        escreverPaginaNoDisco(rrnPagina, &pagina);
+    } else {
+        dividirPagina(rrnPagina, chave);
+    }
+    
+    return 1;
+}
+
+int buscarChave(char chave[TAMANHO_PLACA]) {
+    Pagina pagina;
+    int rrnPagina = rrnRaiz;
+    
+    while (rrnPagina != -1) {
+        lerPagina(rrnPagina, &pagina);
+        
+        for (int i = 0; i < pagina.qtdChaves; i++) {
+            if (strcmp(chave, pagina.chaves[i]) == 0) {
+                return rrnPagina;
+            } else if (strcmp(chave, pagina.chaves[i]) < 0) {
+                rrnPagina = pagina.filhos[i];
+                break;
+            }
+        }
+        
+        rrnPagina = pagina.filhos[pagina.qtdChaves];
+    }
+    
+    return -1;
+}
+
+int removerChave(char chave[TAMANHO_PLACA]) {
+    // TODO
+    return -1;
+}
+
+void escreverCabecalho(FILE *file) {
+    int m = M;
+    fwrite(&m, sizeof(int), 1, file);
+    fwrite(&rrnRaiz, sizeof(int), 1, file);
 }
 
 int buscarIndice(char chave[TAMANHO_PLACA], Pagina *pagina) {
@@ -186,6 +240,7 @@ void promoverChave(char chave[TAMANHO_PLACA], int rrn1, int rrn2) {
 
         rrnRaiz = geraRrnPaginas();
         escreverPaginaNoDisco(rrnRaiz, &novaRaiz);
+        setCabecalhoRaiz(rrnRaiz);
 
         return;
     }
@@ -194,9 +249,11 @@ void promoverChave(char chave[TAMANHO_PLACA], int rrn1, int rrn2) {
 
     if (paginaPai.qtdChaves < M - 1) {
         int index = buscarIndice(chave, &paginaPai);
+
         inserirNaPagina(&paginaPai, chave);
         paginaPai.filhos[index] = rrn1;
         paginaPai.filhos[index + 1] = rrn2;
+
         escreverPaginaNoDisco(rrnPai, &paginaPai);
     } else {
         dividirPagina(rrnPai, chave);
@@ -247,40 +304,4 @@ void dividirPagina(int rrn, char chave[TAMANHO_PLACA]) {
     escreverPaginaNoDisco(rrn, &pagina);
 
     promoverChave(chaves[meio], rrn, novoRrn);
-}
-
-int adicionarChave(char chave[TAMANHO_PLACA]) {
-    Pagina pagina;
-    int rrnPagina = buscarPaginaInsercao(chave, &pagina);
-    
-    if (pagina.qtdChaves < M - 1) { // maximo de chaves
-        inserirNaPagina(&pagina, chave);
-        escreverPaginaNoDisco(rrnPagina, &pagina);
-    } else {
-        dividirPagina(rrnPagina, chave);
-    }
-    
-    return 1;
-}
-
-int buscarChave(char chave[TAMANHO_PLACA]) {
-    Pagina pagina;
-    int rrnPagina = rrnRaiz;
-    
-    while (rrnPagina != -1) {
-        lerPagina(rrnPagina, &pagina);
-        
-        for (int i = 0; i < pagina.qtdChaves; i++) {
-            if (strcmp(chave, pagina.chaves[i]) == 0) {
-                return rrnPagina;
-            } else if (strcmp(chave, pagina.chaves[i]) < 0) {
-                rrnPagina = pagina.filhos[i];
-                break;
-            }
-        }
-        
-        rrnPagina = pagina.filhos[pagina.qtdChaves];
-    }
-    
-    return -1;
 }
